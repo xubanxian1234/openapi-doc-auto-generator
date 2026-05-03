@@ -182,7 +182,8 @@ function openHelp() {
 <style scoped>
 /* ==================== 布局 ==================== */
 .app {
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
 }
