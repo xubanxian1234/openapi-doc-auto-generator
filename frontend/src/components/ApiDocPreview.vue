@@ -1,19 +1,24 @@
 <template>
   <div ref="previewRef" class="doc-table__container" v-if="doc">
-    <!-- 遍历每个端点 -->
-    <div
-      v-for="(endpoint, idx) in doc.endpoints"
-      :key="idx"
-      class="doc-table__endpoint-section"
-    >
-      <!-- 端点标题 (类似 3.1 创建项目) -->
-      <div class="doc-table__endpoint-title">
-        3.{{ idx + 1 }} {{ endpoint.summary || endpoint.path }}
-        <span v-if="endpoint.deprecated" class="doc-table__deprecated-tag">[已废弃]</span>
-      </div>
+    <!-- 分组遍历端点 -->
+    <div v-for="(group, gIdx) in groupedEndpoints" :key="'g' + gIdx" class="doc-table__group-section">
+      <!-- 大分类标题 (例如：1. 项目管理) -->
+      <div class="doc-table__group-title">{{ gIdx + 1 }}. {{ group.tag }}</div>
 
-      <!-- 业务说明 -->
-      <div class="doc-table__section-heading">业务说明</div>
+      <!-- 遍历组内端点 -->
+      <div
+        v-for="(endpoint, eIdx) in group.endpoints"
+        :key="eIdx"
+        class="doc-table__endpoint-section"
+      >
+        <!-- 端点标题 (例如：1.1 创建项目) -->
+        <div class="doc-table__endpoint-title">
+          {{ gIdx + 1 }}.{{ eIdx + 1 }} {{ endpoint.summary || endpoint.path }}
+          <span v-if="endpoint.deprecated" class="doc-table__deprecated-tag">[已废弃]</span>
+        </div>
+
+        <!-- 业务说明 -->
+        <div class="doc-table__section-heading">业务说明</div>
       <div class="doc-table__business-desc">
         {{ endpoint.description || endpoint.summary || '无详细业务说明。' }}
       </div>
@@ -108,20 +113,46 @@
           </template>
         </tbody>
       </table>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, h, defineComponent } from 'vue'
+import { ref, h, computed, defineComponent } from 'vue'
 import type { ApiDocumentDTO, SchemaFieldDTO } from '../types/api'
 import '../styles/doc-table.css'
 
-defineProps<{
+const props = defineProps<{
   doc: ApiDocumentDTO | null
 }>()
 
 const previewRef = ref<HTMLElement | null>(null)
+
+// ==================== 数据分组逻辑 ====================
+interface EndpointGroup {
+  tag: string
+  endpoints: ApiEndpointDTO[]
+}
+
+const groupedEndpoints = computed<EndpointGroup[]>(() => {
+  if (!props.doc || !props.doc.endpoints) return []
+  
+  const map = new Map<string, ApiEndpointDTO[]>()
+  const groups: EndpointGroup[] = []
+  
+  for (const ep of props.doc.endpoints) {
+    const tag = ep.tag || '默认分组'
+    if (!map.has(tag)) {
+      const arr: ApiEndpointDTO[] = []
+      map.set(tag, arr)
+      groups.push({ tag, endpoints: arr })
+    }
+    map.get(tag)!.push(ep)
+  }
+  
+  return groups
+})
 
 const HIGHLIGHT_KEYWORDS = ['非必需', '默认值']
 

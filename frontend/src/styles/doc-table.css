@@ -21,9 +21,26 @@
   line-height: 1.5;
 }
 
-/* ==================== 端点标题 ==================== */
+/* ==================== 端点分组与标题 ==================== */
+.doc-table__group-section {
+  margin-bottom: 32px;
+}
+
+.doc-table__group-title {
+  font-size: 18pt;
+  font-weight: bold;
+  color: #000000;
+  margin: 32px 0 16px 0;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--border-color, #eaeaea);
+}
+
+.doc-table__group-title:first-child {
+  margin-top: 0;
+}
+
 .doc-table__endpoint-title {
-  font-size: 12pt;
+  font-size: 14pt;
   font-weight: bold;
   color: #000000;
   margin: 24px 0 8px 0;

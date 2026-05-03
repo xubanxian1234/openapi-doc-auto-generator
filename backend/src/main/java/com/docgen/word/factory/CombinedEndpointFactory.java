@@ -19,9 +19,9 @@ import java.util.List;
  */
 public class CombinedEndpointFactory extends WordSectionFactory {
 
-    public void render(XWPFDocument document, ApiEndpointDTO endpoint, int endpointIndex) {
+    public void render(XWPFDocument document, ApiEndpointDTO endpoint, String indexStr) {
         // 1. 端点标题
-        renderEndpointTitle(document, endpoint, endpointIndex);
+        renderEndpointTitle(document, endpoint, indexStr);
 
         // 2. 业务说明
         renderSectionHeading(document, "业务说明");
@@ -34,13 +34,13 @@ public class CombinedEndpointFactory extends WordSectionFactory {
         renderEndpointTable(document, endpoint);
     }
 
-    private void renderEndpointTitle(XWPFDocument document, ApiEndpointDTO endpoint, int index) {
+    private void renderEndpointTitle(XWPFDocument document, ApiEndpointDTO endpoint, String indexStr) {
         XWPFParagraph p = document.createParagraph();
         p.setSpacingBefore(400);
         p.setSpacingAfter(200);
 
         XWPFRun run = p.createRun();
-        String titleText = "3." + index + " " + (endpoint.getSummary() != null ? endpoint.getSummary() : endpoint.getPath());
+        String titleText = indexStr + " " + (endpoint.getSummary() != null ? endpoint.getSummary() : endpoint.getPath());
         run.setText(titleText);
         run.setFontFamily(WordStyleConstants.FONT_FAMILY);
         run.setFontSize(14);
@@ -259,5 +259,17 @@ public class CombinedEndpointFactory extends WordSectionFactory {
         }
         
         return sb.toString();
+    }
+
+    public void renderTagHeading(XWPFDocument document, int index, String tag) {
+        XWPFParagraph p = document.createParagraph();
+        p.setSpacingBefore(600);
+        p.setSpacingAfter(300);
+
+        XWPFRun run = p.createRun();
+        run.setText(index + ". " + tag);
+        run.setFontFamily(WordStyleConstants.FONT_FAMILY);
+        run.setFontSize(18);
+        run.setBold(true);
     }
 }

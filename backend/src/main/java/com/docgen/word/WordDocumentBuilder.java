@@ -6,6 +6,11 @@ import com.docgen.word.factory.CombinedEndpointFactory;
 import com.docgen.word.factory.TitleSectionFactory;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
 /**
  * Word 文档建造者 — 建造者模式 (Builder Pattern)。
  *
@@ -42,6 +47,8 @@ public class WordDocumentBuilder {
         return this;
     }
 
+
+
     /**
      * 添加所有端点的表格。
      */
@@ -49,9 +56,25 @@ public class WordDocumentBuilder {
         if (docDTO.getEndpoints() == null) {
             return this;
         }
-        int index = 1;
+
+        // 按 tag 分组
+        Map<String, List<ApiEndpointDTO>> grouped = new LinkedHashMap<>();
         for (ApiEndpointDTO endpoint : docDTO.getEndpoints()) {
-            addEndpoint(endpoint, index++);
+            String tag = endpoint.getTag() != null ? endpoint.getTag() : "默认分组";
+            grouped.computeIfAbsent(tag, k -> new ArrayList<>()).add(endpoint);
+        }
+
+        int majorIndex = 1;
+        for (Map.Entry<String, List<ApiEndpointDTO>> entry : grouped.entrySet()) {
+            // 渲染大分类标题
+            endpointFactory.renderTagHeading(document, majorIndex, entry.getKey());
+
+            int minorIndex = 1;
+            for (ApiEndpointDTO endpoint : entry.getValue()) {
+                addEndpoint(endpoint, majorIndex + "." + minorIndex);
+                minorIndex++;
+            }
+            majorIndex++;
         }
         return this;
     }
@@ -59,8 +82,8 @@ public class WordDocumentBuilder {
     /**
      * 添加单个端点的完整渲染（标题 + 业务说明 + 接口表格）。
      */
-    public WordDocumentBuilder addEndpoint(ApiEndpointDTO endpoint, int index) {
-        endpointFactory.render(document, endpoint, index);
+    public WordDocumentBuilder addEndpoint(ApiEndpointDTO endpoint, String indexStr) {
+        endpointFactory.render(document, endpoint, indexStr);
         return this;
     }
 
