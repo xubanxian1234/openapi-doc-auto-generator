@@ -1,0 +1,158 @@
+/**
+ * 高保真文档表格样式 — CSS 隔离。
+ *
+ * 设计意图：此区域的样式必须与 Element Plus 完全隔离，
+ * 所有类名以 .doc-table__ 为前缀，防止 UI 库样式污染。
+ *
+ * 样式规范（与后端 Word 像素级一致）：
+ * - 黑色实线单边框 (1px solid #000)
+ * - 背景色区分：URL=#FFF2CC, Header=#E2EFDA, Request=#D9E1F2, Response=#D9D9D9
+ * - 蓝色着色：关键词使用 .doc-table__highlight (#0000FF)
+ */
+
+/* ==================== 表格容器 ==================== */
+.doc-table__container {
+  width: 100%;
+  padding: 24px;
+  background: #ffffff;
+  color: #000000;
+  font-family: '微软雅黑', 'Microsoft YaHei', Arial, sans-serif;
+  font-size: 9pt;
+  line-height: 1.5;
+}
+
+/* ==================== 端点标题 ==================== */
+.doc-table__endpoint-title {
+  font-size: 12pt;
+  font-weight: bold;
+  color: #000000;
+  margin: 24px 0 8px 0;
+  padding: 0;
+}
+
+.doc-table__endpoint-title:first-child {
+  margin-top: 0;
+}
+
+.doc-table__deprecated-tag {
+  color: #ff0000;
+  font-weight: bold;
+  margin-left: 8px;
+}
+
+/* ==================== 文档标题区 ==================== */
+.doc-table__doc-title {
+  font-size: 16pt;
+  font-weight: bold;
+  text-align: center;
+  color: #000000;
+  margin-bottom: 8px;
+}
+
+.doc-table__doc-meta {
+  font-size: 9pt;
+  color: #000000;
+  margin-bottom: 4px;
+}
+
+.doc-table__doc-meta-section {
+  margin-bottom: 16px;
+}
+
+/* ==================== 表格核心 ==================== */
+.doc-table__table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid #000000;
+  margin-bottom: 16px;
+  table-layout: fixed;
+}
+
+.doc-table__table th,
+.doc-table__table td {
+  border: 1px solid #000000;
+  padding: 4px 6px;
+  font-size: 9pt;
+  font-family: '微软雅黑', 'Microsoft YaHei', Arial, sans-serif;
+  color: #000000;
+  text-align: left;
+  vertical-align: top;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* ==================== 区域背景色 ==================== */
+
+/** 请求 URL 行：浅黄色 */
+.doc-table__row--url {
+  background-color: #FFF2CC;
+}
+
+/** 请求头行：浅绿色 */
+.doc-table__row--header {
+  background-color: #E2EFDA;
+}
+
+/** 请求参数区域：浅蓝色 */
+.doc-table__row--request {
+  background-color: #D9E1F2;
+}
+
+/** 返回参数区域：浅灰色 */
+.doc-table__row--response {
+  background-color: #D9D9D9;
+}
+
+/** 列标题行 */
+.doc-table__row--col-header {
+  font-weight: bold;
+}
+
+/* ==================== 蓝色关键词着色 ==================== */
+.doc-table__highlight {
+  color: #0000FF;
+  font-weight: normal;
+}
+
+/* ==================== 字段缩进（树形层级） ==================== */
+.doc-table__indent {
+  display: inline-block;
+  color: #999999;
+}
+
+.doc-table__field-name {
+  display: inline;
+}
+
+/* ==================== 区域标题单元格 ==================== */
+.doc-table__section-title {
+  font-weight: bold;
+  font-size: 10pt;
+}
+
+/* ==================== 页面分隔 (PDF导出用) ==================== */
+.doc-table__page-break {
+  page-break-before: always;
+}
+
+/* ==================== 业务说明与接口说明 ==================== */
+.doc-table__section-heading {
+  font-size: 14pt;
+  font-weight: bold;
+  color: #000000;
+  margin: 16px 0 8px 0;
+  padding: 0;
+}
+
+.doc-table__business-desc {
+  font-size: 9pt;
+  color: #333333;
+  margin-bottom: 16px;
+  line-height: 1.8;
+  text-align: justify;
+}
+
+.doc-table__cell-bold {
+  font-weight: bold;
+}
+

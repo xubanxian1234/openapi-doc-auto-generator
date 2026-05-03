@@ -1,0 +1,238 @@
+<template>
+  <div ref="previewRef" class="doc-table__container" v-if="doc">
+    <!-- 遍历每个端点 -->
+    <div
+      v-for="(endpoint, idx) in doc.endpoints"
+      :key="idx"
+      class="doc-table__endpoint-section"
+    >
+      <!-- 端点标题 (类似 3.1 创建项目) -->
+      <div class="doc-table__endpoint-title">
+        3.{{ idx + 1 }} {{ endpoint.summary || endpoint.path }}
+        <span v-if="endpoint.deprecated" class="doc-table__deprecated-tag">[已废弃]</span>
+      </div>
+
+      <!-- 业务说明 -->
+      <div class="doc-table__section-heading">业务说明</div>
+      <div class="doc-table__business-desc">
+        {{ endpoint.description || endpoint.summary || '无详细业务说明。' }}
+      </div>
+
+      <!-- 接口说明 -->
+      <div class="doc-table__section-heading">接口说明</div>
+
+      <!-- 单一的合并表格 -->
+      <table class="doc-table__table">
+        <colgroup>
+          <col style="width: 25%;" />
+          <col style="width: 20%;" />
+          <col style="width: 55%;" />
+        </colgroup>
+        <tbody>
+          <!-- 请求 URL 区域 -->
+          <tr class="doc-table__row--url">
+            <td colspan="3" class="doc-table__section-title">请求 URL</td>
+          </tr>
+          <tr>
+            <td class="doc-table__cell-bold">URL</td>
+            <td colspan="2">{{ endpoint.path }}</td>
+          </tr>
+          <tr>
+            <td class="doc-table__cell-bold">method</td>
+            <td colspan="2">{{ endpoint.method }}</td>
+          </tr>
+          <tr>
+            <td class="doc-table__cell-bold">Content-type</td>
+            <td colspan="2">{{ endpoint.contentType || 'application/json' }}</td>
+          </tr>
+
+          <!-- 请求头区域 -->
+          <template v-if="endpoint.headers && endpoint.headers.length > 0">
+            <tr class="doc-table__row--header">
+              <td colspan="3" class="doc-table__section-title">请求头</td>
+            </tr>
+            <tr v-for="(header, hIdx) in endpoint.headers" :key="'h' + hIdx">
+              <td class="doc-table__cell-bold">{{ header.name }}</td>
+              <td colspan="2">{{ header.example || header.description || header.type || 'string' }}</td>
+            </tr>
+          </template>
+
+          <!-- 请求参数区域 -->
+          <template v-if="endpoint.requestFields && endpoint.requestFields.length > 0">
+            <tr class="doc-table__row--request">
+              <td colspan="3" class="doc-table__section-title">请求参数</td>
+            </tr>
+            <tr class="doc-table__row--col-header">
+              <td>参数名</td>
+              <td>类型</td>
+              <td>描述</td>
+            </tr>
+            <tr
+              v-for="(field, fIdx) in flattenFields(endpoint.requestFields)"
+              :key="'req' + fIdx"
+            >
+              <td>
+                <span class="doc-table__indent" v-if="field.depth > 0">
+                  {{ indent(field.depth) }}└&nbsp;
+                </span>
+                <span class="doc-table__field-name">{{ field.name || '' }}</span>
+              </td>
+              <td>{{ field.type || '' }}</td>
+              <td>
+                <RichText :text="buildDescription(field)" />
+              </td>
+            </tr>
+          </template>
+
+          <!-- 返回参数区域 -->
+          <template v-if="endpoint.responseFields && endpoint.responseFields.length > 0">
+            <tr class="doc-table__row--response">
+              <td colspan="3" class="doc-table__section-title">返回参数</td>
+            </tr>
+            <!-- 返回参数不带表头，直接列出数据 -->
+            <tr
+              v-for="(field, fIdx) in flattenFields(endpoint.responseFields)"
+              :key="'res' + fIdx"
+            >
+              <td>
+                <span class="doc-table__indent" v-if="field.depth > 0">
+                  {{ indent(field.depth) }}└&nbsp;
+                </span>
+                <span class="doc-table__field-name">{{ field.name || '' }}</span>
+              </td>
+              <td>{{ field.type || '' }}</td>
+              <td>
+                <RichText :text="buildDescription(field)" />
+              </td>
+            </tr>
+          </template>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, h, defineComponent } from 'vue'
+import type { ApiDocumentDTO, SchemaFieldDTO } from '../types/api'
+import '../styles/doc-table.css'
+
+defineProps<{
+  doc: ApiDocumentDTO | null
+}>()
+
+const previewRef = ref<HTMLElement | null>(null)
+
+const HIGHLIGHT_KEYWORDS = ['非必需', '默认值']
+
+const RichText = defineComponent({
+  props: {
+    text: { type: String, default: '' },
+  },
+  setup(props) {
+    return () => {
+      if (!props.text) return h('span', '')
+
+      const segments = splitByKeywords(props.text)
+      const children = segments.map((seg) => {
+        if (seg.highlighted) {
+          return h('span', { class: 'doc-table__highlight' }, seg.text)
+        }
+        return seg.text
+      })
+      return h('span', children)
+    }
+  },
+})
+
+interface TextSegment {
+  text: string
+  highlighted: boolean
+}
+
+function splitByKeywords(text: string): TextSegment[] {
+  const segments: TextSegment[] = []
+  let remaining = text
+
+  while (remaining.length > 0) {
+    const match = findFirstKeyword(remaining)
+
+    if (!match) {
+      segments.push({ text: remaining, highlighted: false })
+      break
+    }
+
+    if (match.index > 0) {
+      segments.push({ text: remaining.substring(0, match.index), highlighted: false })
+    }
+
+    segments.push({ text: match.keyword, highlighted: true })
+    remaining = remaining.substring(match.index + match.keyword.length)
+  }
+
+  return segments
+}
+
+function findFirstKeyword(text: string): { index: number; keyword: string } | null {
+  let earliest: { index: number; keyword: string } | null = null
+
+  for (const keyword of HIGHLIGHT_KEYWORDS) {
+    const idx = text.indexOf(keyword)
+    if (idx >= 0 && (earliest === null || idx < earliest.index)) {
+      earliest = { index: idx, keyword }
+    }
+  }
+
+  return earliest
+}
+
+function flattenFields(fields: SchemaFieldDTO[]): SchemaFieldDTO[] {
+  const result: SchemaFieldDTO[] = []
+  for (const field of fields) {
+    addFieldRecursive(result, field)
+  }
+  return result
+}
+
+function addFieldRecursive(result: SchemaFieldDTO[], field: SchemaFieldDTO): void {
+  if (field.name) {
+    result.push(field)
+  }
+  if (field.children) {
+    for (const child of field.children) {
+      addFieldRecursive(result, child)
+    }
+  }
+}
+
+function indent(depth: number): string {
+  return '\u00A0\u00A0\u00A0\u00A0'.repeat(depth)
+}
+
+function buildDescription(field: SchemaFieldDTO): string {
+  const parts: string[] = []
+  if (field.description) parts.push(field.description)
+  if (field.enumValues && field.enumValues.length > 0) {
+    parts.push('枚举值: ' + field.enumValues.join(', ') + '。')
+  }
+  
+  // 将默认值和是否必需信息追加到描述末尾（配合着色）
+  let extraInfo = ''
+  if (field.defaultValue) {
+    extraInfo += `默认值为 ${field.defaultValue}，`
+  }
+  extraInfo += field.required ? '' : '非必需'
+  
+  if (extraInfo) {
+    // 确保与前面的描述有间隔
+    if (parts.length > 0 && !parts[0].endsWith('。') && !parts[0].endsWith('，')) {
+      parts.push('，')
+    }
+    parts.push(extraInfo + '。')
+  }
+  
+  return parts.join('')
+}
+
+defineExpose({ previewRef })
+</script>

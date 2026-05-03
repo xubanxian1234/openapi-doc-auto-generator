@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.docgen</groupId>
+        <artifactId>doc-auto-generator</artifactId>
+        <version>1.0.0</version>
+    </parent>
+
+    <artifactId>doc-auto-generator-frontend</artifactId>
+    <packaging>pom</packaging>
+
+    <name>Doc Auto Generator Frontend</name>
+    <description>Vue 3 + Vite + TypeScript 前端模块，通过 frontend-maven-plugin 在 Maven 构建时自动执行 npm install 和 vite build</description>
+
+    <build>
+        <plugins>
+            <!--
+                frontend-maven-plugin：
+                在 Maven 生命周期中自动安装 Node.js 并执行前端构建命令。
+                这使得 `mvn clean package` 一条命令即可完成全栈构建。
+
+                执行顺序：
+                1. install-node-and-npm → 下载并安装指定版本 Node.js
+                2. npm-install → 执行 npm install 安装前端依赖
+                3. npm-run-build → 执行 npm run build (Vite 生产构建)
+            -->
+            <plugin>
+                <groupId>com.github.eirslett</groupId>
+                <artifactId>frontend-maven-plugin</artifactId>
+                <version>1.15.1</version>
+                <configuration>
+                    <workingDirectory>${project.basedir}</workingDirectory>
+                    <installDirectory>${project.build.directory}/node</installDirectory>
+                </configuration>
+                <executions>
+                    <!-- Step 1: 安装 Node.js 18 LTS -->
+                    <execution>
+                        <id>install-node-and-npm</id>
+                        <goals>
+                            <goal>install-node-and-npm</goal>
+                        </goals>
+                        <configuration>
+                            <nodeVersion>v18.20.4</nodeVersion>
+                        </configuration>
+                    </execution>
+
+                    <!-- Step 2: npm install（安装 package.json 中的依赖） -->
+                    <execution>
+                        <id>npm-install</id>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <configuration>
+                            <arguments>install</arguments>
+                        </configuration>
+                    </execution>
+
+                    <!-- Step 3: npm run build（执行 Vite 生产构建，输出到 dist/） -->
+                    <execution>
+                        <id>npm-run-build</id>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <phase>generate-resources</phase>
+                        <configuration>
+                            <arguments>run build</arguments>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

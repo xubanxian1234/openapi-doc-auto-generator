@@ -1,0 +1,209 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "项目管理系统开放 API",
+    "description": "提供给第三方的项目管理及操作接口。本文档包含了项目的创建、查询、更新等操作规范。",
+    "version": "1.2.0"
+  },
+  "servers": [
+    {
+      "url": "https://api.example.com/v1"
+    }
+  ],
+  "paths": {
+    "/thirdparty/createProject": {
+      "post": {
+        "tags": ["项目管理"],
+        "summary": "创建项目",
+        "description": "支持创建空项目。isEmpty 参数为 true 时，项目中不包含任何文档，为 false 时，项目中会创建一个零件文档与一个装配文档。此属性非必需，默认值为 false。isPublic 参数为 true 时，创建的项目为私有项目。此属性非必需，默认值为 false。",
+        "operationId": "createProject",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": true,
+            "description": "Bearer xxx<token>",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["projectName"],
+                "properties": {
+                  "projectName": {
+                    "type": "string",
+                    "description": "项目名称"
+                  },
+                  "isEmpty": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "项目是否为空"
+                  },
+                  "isPublic": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "项目是否为公开项目"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "description": "返回码。200: 成功; 403: 非法请求。"
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "结果描述"
+                    },
+                    "data": {
+                      "type": "object",
+                      "description": "返回信息",
+                      "properties": {
+                        "projectId": {
+                          "type": "string",
+                          "description": "新创建的项目 ID"
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "description": "创建时间"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/thirdparty/getProjectDetail": {
+      "get": {
+        "tags": ["项目管理"],
+        "summary": "获取项目详情",
+        "description": "根据项目 ID 查询指定项目的详细信息，包括成员列表和当前状态。",
+        "operationId": "getProjectDetail",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": true,
+            "description": "Bearer xxx<token>",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "projectId",
+            "in": "query",
+            "required": true,
+            "description": "需要查询的项目唯一 ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "includeMembers",
+            "in": "query",
+            "required": false,
+            "description": "是否同时返回项目成员列表",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "查询成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectDetailResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ProjectDetailResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "返回码"
+          },
+          "message": {
+            "type": "string",
+            "description": "结果描述"
+          },
+          "data": {
+            "type": "object",
+            "description": "项目详情实体",
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "项目 ID"
+              },
+              "name": {
+                "type": "string",
+                "description": "项目名称"
+              },
+              "status": {
+                "type": "string",
+                "description": "项目当前状态",
+                "enum": ["ACTIVE", "ARCHIVED", "DELETED"]
+              },
+              "members": {
+                "type": "array",
+                "description": "项目成员列表（仅当 includeMembers=true 时返回）",
+                "items": {
+                  "$ref": "#/components/schemas/MemberInfo"
+                }
+              }
+            }
+          }
+        }
+      },
+      "MemberInfo": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "description": "用户唯一标识"
+          },
+          "userName": {
+            "type": "string",
+            "description": "用户昵称"
+          },
+          "role": {
+            "type": "string",
+            "description": "用户在该项目中的角色",
+            "enum": ["ADMIN", "EDITOR", "VIEWER"]
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,30 @@
+server:
+  # Port is dynamically injected by SmartPortConfig, default here
+  port: ${server.port:8080}
+
+spring:
+  application:
+    name: doc-auto-generator
+
+  # JSON serialization config
+  jackson:
+    default-property-inclusion: non_null
+    serialization:
+      indent-output: true
+
+  # Static resources config: host frontend Vite build outputs
+  web:
+    resources:
+      static-locations: classpath:/static/
+
+  # File upload limits: OpenAPI JSON files can be large (e.g., Onshape is ~2MB)
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+# Logging config
+logging:
+  level:
+    com.docgen: INFO
+    io.swagger.parser: WARN
