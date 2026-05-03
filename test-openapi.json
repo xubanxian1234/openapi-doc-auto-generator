@@ -13,7 +13,7 @@
   "paths": {
     "/thirdparty/createProject": {
       "post": {
-        "tags": ["项目管理"],
+        "tags": ["项目管理 (表单输入示例)"],
         "summary": "创建项目",
         "description": "支持创建空项目。isEmpty 参数为 true 时，项目中不包含任何文档，为 false 时，项目中会创建一个零件文档与一个装配文档。此属性非必需，默认值为 false。isPublic 参数为 true 时，创建的项目为私有项目。此属性非必需，默认值为 false。",
         "operationId": "createProject",
@@ -94,9 +94,155 @@
         }
       }
     },
+    "/thirdparty/uploadDocument": {
+      "post": {
+        "tags": ["文档管理 (文件上传示例)"],
+        "summary": "上传项目文档",
+        "description": "上传二进制文件到指定的项目中。",
+        "operationId": "uploadDocument",
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "query",
+            "required": true,
+            "description": "目标项目 ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["file", "documentName"],
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "需要上传的二进制文件 (支持 doc, pdf, zip)"
+                  },
+                  "documentName": {
+                    "type": "string",
+                    "description": "文档重命名名称"
+                  },
+                  "tags": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "文档分类标签"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "上传成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/thirdparty/addMember": {
+      "post": {
+        "tags": ["成员管理 (JSON 输入示例)"],
+        "summary": "添加项目成员",
+        "description": "通过标准的 application/json 格式添加新成员到项目组。",
+        "operationId": "addMember",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["projectId", "userInfo"],
+                "properties": {
+                  "projectId": {
+                    "type": "string",
+                    "description": "项目 ID"
+                  },
+                  "notifyUser": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "是否发送邮件通知"
+                  },
+                  "userInfo": {
+                    "$ref": "#/components/schemas/MemberInfo"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "添加成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/thirdparty/updateConfig": {
+      "put": {
+        "tags": ["配置管理 (URL-Encoded 示例)"],
+        "summary": "更新项目全局配置",
+        "description": "使用 application/x-www-form-urlencoded 格式提交简单的键值对更新。",
+        "operationId": "updateConfig",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "themeColor": {
+                    "type": "string",
+                    "description": "项目主题色 (Hex)"
+                  },
+                  "enableWatermark": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "是否开启水印"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "更新成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/thirdparty/getProjectDetail": {
       "get": {
-        "tags": ["项目管理"],
+        "tags": ["项目管理 (Query 参数示例)"],
         "summary": "获取项目详情",
         "description": "根据项目 ID 查询指定项目的详细信息，包括成员列表和当前状态。",
         "operationId": "getProjectDetail",
@@ -147,6 +293,19 @@
   },
   "components": {
     "schemas": {
+      "BaseResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "返回状态码"
+          },
+          "message": {
+            "type": "string",
+            "description": "错误信息或操作结果提示"
+          }
+        }
+      },
       "ProjectDetailResponse": {
         "type": "object",
         "properties": {
@@ -188,6 +347,7 @@
       },
       "MemberInfo": {
         "type": "object",
+        "required": ["userId", "role"],
         "properties": {
           "userId": {
             "type": "string",

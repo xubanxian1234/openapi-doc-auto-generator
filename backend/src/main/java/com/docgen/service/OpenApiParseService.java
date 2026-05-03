@@ -310,13 +310,30 @@ public class OpenApiParseService {
         if (requestBody == null || requestBody.getContent() == null) {
             return Collections.emptyList();
         }
+        
+        String contentType = extractContentType(operation);
+        String inLocation = "body";
+        if (contentType != null && (contentType.contains("form-data") || contentType.contains("x-www-form-urlencoded"))) {
+            inLocation = "form";
+        }
+
         Schema<?> bodySchema = extractFirstSchema(requestBody.getContent());
         if (bodySchema == null) {
             return Collections.emptyList();
         }
-        return strategyFactory.delegateParse(
+        List<SchemaFieldDTO> fields = strategyFactory.delegateParse(
                 null, bodySchema, Collections.emptySet(),
                 allSchemas, 0, new HashSet<>());
+                
+        // 给根级参数增加位置标识
+        for (SchemaFieldDTO field : fields) {
+            if (field.getDepth() == 0) {
+                String desc = field.getDescription() != null ? field.getDescription() : "";
+                field.setDescription("[" + inLocation + "] " + desc);
+            }
+        }
+        
+        return fields;
     }
 
     // ======================== 响应参数提取 ========================
