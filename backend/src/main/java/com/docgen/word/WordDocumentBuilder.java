@@ -197,8 +197,8 @@ public class WordDocumentBuilder {
     }
 
     public XWPFDocument build() {
-        // 强制 Word 在打开时更新域（包括目录域和页码域）
-        document.enforceUpdateFields();
+        // 不使用强制 Word 在打开时更新域（包括目录域和页码域），这会导致每次在打开word的时候都会弹窗提示
+        // document.enforceUpdateFields();
         return document;
     }
 

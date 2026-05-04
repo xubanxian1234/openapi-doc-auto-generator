@@ -200,7 +200,13 @@ export function useExport() {
     exportingWord.value = true
     try {
       await downloadWord(jsonContent, `${fileName}.docx`)
-      ElMessage.success('Word 导出成功')
+      // 【修改】：使用最终版的文案，引导用户通过 F9 纯净刷新
+      ElMessage({
+        message: 'Word 导出成功！打开文档后，按下【Ctrl + A】全选，再按【F9】键即可秒出目录。随后按 Ctrl+S 保存，该文档将永久生成完美目录且永不弹窗！',
+        type: 'success',
+        duration: 10000, // 停留 10 秒
+        showClose: true
+      })
     } catch (error) {
       console.error('Word 导出失败:', error)
       ElMessage.error('Word 导出失败，请检查后端服务是否运行')
@@ -208,6 +214,7 @@ export function useExport() {
       exportingWord.value = false
     }
   }
+  
 
   return { exportingPdf, exportingWord, exportPdf, exportWord }
 }
