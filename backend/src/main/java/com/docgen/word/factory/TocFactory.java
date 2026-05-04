@@ -46,7 +46,7 @@ public class TocFactory {
         CTR instrRun = ctp.addNewR();
         CTText instrText = instrRun.addNewInstrText();
         // 设置 field 文本，前后加空格确保隔离
-        instrText.setStringValue(" TOC \\o \"1-3\" \\h \\z \\u ");
+        instrText.setStringValue(" TOC \\o \"1-3\" \\h \\z \\u \\* MERGEFORMAT ");
 
         // 3. fldChar separate
         CTR sepRun = ctp.addNewR();

@@ -143,9 +143,10 @@ public class WordDocumentBuilder {
         tocFactory.renderNativeTOC(document);
 
         // 2. 目录后插入分节符（下一页）
-        List<XWPFParagraph> paragraphs = document.getParagraphs();
-        XWPFParagraph lastTocPara = paragraphs.get(paragraphs.size() - 1);
-        addSectionBreakNextPage(lastTocPara);
+        // 不能将分节符挂载在目录的段落上，否则 Word 强制更新目录时会重写并破坏该段落，
+        // 导致分节符丢失、页码重置失效，进而引发实际页数对不上。
+        XWPFParagraph breakPara = document.createParagraph();
+        addSectionBreakNextPage(breakPara);
         
         // 设置正文节的页码从 1 开始
         setPageNumberStart(1);
