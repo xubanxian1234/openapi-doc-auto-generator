@@ -42,6 +42,12 @@ public class CombinedEndpointFactory extends WordSectionFactory {
         p.setSpacingBefore(400);
         p.setSpacingAfter(200);
 
+        // 设置大纲级别为 2 级 (outlineLvl = 1)
+        org.openxmlformats.schemas.wordprocessingml.x2006.main.CTPPr ppr = p.getCTP().isSetPPr() 
+            ? p.getCTP().getPPr() 
+            : p.getCTP().addNewPPr();
+        ppr.addNewOutlineLvl().setVal(java.math.BigInteger.valueOf(1));
+
         XWPFRun run = p.createRun();
         String titleText = indexStr + " " + (endpoint.getSummary() != null ? endpoint.getSummary() : endpoint.getPath());
         run.setText(titleText);
@@ -271,6 +277,12 @@ public class CombinedEndpointFactory extends WordSectionFactory {
         }
         p.setSpacingBefore(600);
         p.setSpacingAfter(300);
+
+        // 设置大纲级别为 1 级 (outlineLvl = 0)
+        org.openxmlformats.schemas.wordprocessingml.x2006.main.CTPPr ppr = p.getCTP().isSetPPr() 
+            ? p.getCTP().getPPr() 
+            : p.getCTP().addNewPPr();
+        ppr.addNewOutlineLvl().setVal(java.math.BigInteger.valueOf(0));
 
         XWPFRun run = p.createRun();
         run.setText(index + ". " + tag);
