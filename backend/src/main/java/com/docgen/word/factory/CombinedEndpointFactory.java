@@ -19,9 +19,9 @@ import java.util.List;
  */
 public class CombinedEndpointFactory extends WordSectionFactory {
 
-    public void render(XWPFDocument document, ApiEndpointDTO endpoint, String indexStr) {
+    public void render(XWPFDocument document, ApiEndpointDTO endpoint, String indexStr, String bookmarkId, String bookmarkName) {
         // 1. 端点标题
-        renderEndpointTitle(document, endpoint, indexStr);
+        renderEndpointTitle(document, endpoint, indexStr, bookmarkId, bookmarkName);
 
         // 2. 业务说明
         renderSectionHeading(document, "业务说明");
@@ -34,8 +34,11 @@ public class CombinedEndpointFactory extends WordSectionFactory {
         renderEndpointTable(document, endpoint);
     }
 
-    private void renderEndpointTitle(XWPFDocument document, ApiEndpointDTO endpoint, String indexStr) {
+    private void renderEndpointTitle(XWPFDocument document, ApiEndpointDTO endpoint, String indexStr, String bookmarkId, String bookmarkName) {
         XWPFParagraph p = document.createParagraph();
+        if (bookmarkId != null && bookmarkName != null) {
+            addBookmark(p, bookmarkId, bookmarkName);
+        }
         p.setSpacingBefore(400);
         p.setSpacingAfter(200);
 
@@ -261,8 +264,11 @@ public class CombinedEndpointFactory extends WordSectionFactory {
         return sb.toString();
     }
 
-    public void renderTagHeading(XWPFDocument document, int index, String tag) {
+    public void renderTagHeading(XWPFDocument document, int index, String tag, String bookmarkId, String bookmarkName) {
         XWPFParagraph p = document.createParagraph();
+        if (bookmarkId != null && bookmarkName != null) {
+            addBookmark(p, bookmarkId, bookmarkName);
+        }
         p.setSpacingBefore(600);
         p.setSpacingAfter(300);
 

@@ -21,6 +21,74 @@
   line-height: 1.5;
 }
 
+/* ==================== 目录 (TOC) ==================== */
+.doc-table__toc {
+  margin-bottom: 40px;
+  padding: 24px 0;
+  background: transparent;
+  font-family: var(--el-font-family, sans-serif);
+}
+
+.doc-table__toc-title {
+  font-size: 18pt;
+  font-weight: 600;
+  color: #303133;
+  margin-bottom: 24px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #EBEEF5;
+  text-align: left;
+}
+
+.doc-table__toc-list, .doc-table__toc-sublist {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+}
+
+.doc-table__toc-sublist {
+  padding-left: 20px;
+  margin-top: 8px;
+}
+
+.doc-table__toc-item-group {
+  margin-bottom: 16px;
+}
+
+.doc-table__toc-item-endpoint {
+  margin-bottom: 10px;
+  display: flex;
+  align-items: baseline;
+}
+
+/* 虚线延伸 */
+.doc-table__toc-item-endpoint::after {
+  content: '';
+  flex-grow: 1;
+  border-bottom: 1px dotted #ccc;
+  margin-left: 8px;
+  position: relative;
+  top: -4px;
+}
+
+.doc-table__toc-link {
+  color: #606266;
+  text-decoration: none;
+  font-size: 11pt;
+  transition: color 0.2s;
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.doc-table__toc-item-group > .doc-table__toc-link {
+  font-weight: bold;
+  color: #303133;
+  font-size: 12pt;
+}
+
+.doc-table__toc-link:hover {
+  color: #409EFF;
+}
+
 /* ==================== 端点分组与标题 ==================== */
 .doc-table__group-section {
   margin-bottom: 32px;

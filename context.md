@@ -29,6 +29,7 @@
 | 第二步：工程化基石 (pom.xml + 启动类) | ✅ 完成 | 3个 pom.xml + 启动类 + 端口探测 + application.yml |
 | 第三步：后端核心逻辑 | ✅ 完成 | DTO模型 + Strategy解析 + Builder/Factory Word生成 + Controller |
 | 第四步：前端与交互 | ✅ 完成 | Vue3+TS 全套组件 + CSS + 导出逻辑 + 帮助手册 |
+| 第五步：目录与页眉页脚 | ✅ 完成 | Word 内部书签实现静态目录跳转，PDF jsPDF挂钩页眉页码，前端预览支持双向跳转 |
 
 ## 核心模块职责分配
 
@@ -39,7 +40,7 @@
 - **service/strategy**: SchemaParseStrategy + 4个策略实现 + SchemaStrategyFactory
 - **word/WordDocumentBuilder**: Builder 模式链式组装 Word
 - **word/WordGenerationService**: DTO → byte[] 转换服务
-- **word/factory**: TitleSectionFactory, EndpointTableFactory, ParameterTableFactory
+- **word/factory**: TitleSectionFactory, EndpointTableFactory, ParameterTableFactory, TocFactory (负责带书签链接的目录)
 - **word/style/WordStyleConstants**: 集中管理所有样式常量
 - **config/SmartPortConfig**: 端口探测工具类
 
@@ -63,6 +64,8 @@
 4. **模板方法 (Template Method)** — WordSectionFactory 抽象基类封装 POI 公共操作
 5. **嵌套深度 ≤ 3 层**：严格使用卫语句 + 方法抽取控制
 6. **循环引用保护**：递归解析时维护 visitedRefs Set，最大深度 10 层
+7. **书签与超链接生成 (Word)**：使用 POI 的 `CTBookmark` 和 `CTHyperlink`，生成完全静态且可直接点击跳转的 Word 目录。
+8. **PDF 导出渲染挂钩**：拦截 `html2pdf.js` 过程对象，利用 `jsPDF` API 在每页独立绘制静态的页眉与页码。
 
 ## 测试数据
 

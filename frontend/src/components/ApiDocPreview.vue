@@ -1,19 +1,46 @@
 <template>
   <div ref="previewRef" class="doc-table__container" v-if="doc">
+    <!-- 目录区 (TOC) -->
+    <div class="doc-table__toc" v-if="groupedEndpoints.length > 0 || doc.description">
+      <h2 class="doc-table__toc-title">目录</h2>
+      <ul class="doc-table__toc-list">
+        <li class="doc-table__toc-item-group" v-if="doc.description">
+          <a href="#overview" class="doc-table__toc-link">1. 概述</a>
+        </li>
+        <li v-for="(group, gIdx) in groupedEndpoints" :key="'toc-g' + gIdx" class="doc-table__toc-item-group">
+          <a :href="'#tag-' + gIdx" class="doc-table__toc-link">{{ gIdx + 2 }}. {{ group.tag }}</a>
+          <ul class="doc-table__toc-sublist" v-if="group.endpoints.length > 0">
+            <li v-for="(endpoint, eIdx) in group.endpoints" :key="'toc-e' + gIdx + '-' + eIdx" class="doc-table__toc-item-endpoint">
+              <a :href="'#ep-' + gIdx + '-' + eIdx" class="doc-table__toc-link">
+                {{ gIdx + 2 }}.{{ eIdx + 1 }} {{ endpoint.summary || endpoint.path }}
+              </a>
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+
+    <!-- 第一章：概述 -->
+    <div class="doc-table__group-section" id="overview" v-if="doc.description">
+      <div class="doc-table__group-title">1. 概述</div>
+      <div class="doc-table__business-desc" style="white-space: pre-wrap;">{{ doc.description }}</div>
+    </div>
+
     <!-- 分组遍历端点 -->
     <div v-for="(group, gIdx) in groupedEndpoints" :key="'g' + gIdx" class="doc-table__group-section">
-      <!-- 大分类标题 (例如：1. 项目管理) -->
-      <div class="doc-table__group-title">{{ gIdx + 1 }}. {{ group.tag }}</div>
+      <!-- 大分类标题 (例如：2. 项目管理) -->
+      <div :id="'tag-' + gIdx" class="doc-table__group-title">{{ gIdx + 2 }}. {{ group.tag }}</div>
 
       <!-- 遍历组内端点 -->
       <div
         v-for="(endpoint, eIdx) in group.endpoints"
         :key="eIdx"
+        :id="'ep-' + gIdx + '-' + eIdx"
         class="doc-table__endpoint-section"
       >
-        <!-- 端点标题 (例如：1.1 创建项目) -->
+        <!-- 端点标题 (例如：2.1 创建项目) -->
         <div class="doc-table__endpoint-title">
-          {{ gIdx + 1 }}.{{ eIdx + 1 }} {{ endpoint.summary || endpoint.path }}
+          {{ gIdx + 2 }}.{{ eIdx + 1 }} {{ endpoint.summary || endpoint.path }}
           <span v-if="endpoint.deprecated" class="doc-table__deprecated-tag">[已废弃]</span>
         </div>
 

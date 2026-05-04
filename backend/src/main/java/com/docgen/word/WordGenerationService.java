@@ -32,7 +32,8 @@ public class WordGenerationService {
 
         XWPFDocument document = new WordDocumentBuilder()
                 .createDocument()
-                .addTitleSection(docDTO)
+                .addHeaderFooter(docDTO)
+                .addCoverPage(docDTO)
                 .addAllEndpoints(docDTO)
                 .build();
 

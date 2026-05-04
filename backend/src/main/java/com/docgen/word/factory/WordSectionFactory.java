@@ -229,4 +229,20 @@ public abstract class WordSectionFactory {
         }
         return tcPr;
     }
+
+    /**
+     * 在段落的开头和结尾添加书签 (Bookmark)，用于目录链接跳转。
+     *
+     * @param paragraph 目标段落
+     * @param id        书签唯一数字 ID
+     * @param name      书签名称 (需唯一，不能包含空格)
+     */
+    protected void addBookmark(XWPFParagraph paragraph, String id, String name) {
+        CTBookmark bookmarkStart = paragraph.getCTP().addNewBookmarkStart();
+        bookmarkStart.setId(new BigInteger(id));
+        bookmarkStart.setName(name);
+
+        CTMarkupRange bookmarkEnd = paragraph.getCTP().addNewBookmarkEnd();
+        bookmarkEnd.setId(new BigInteger(id));
+    }
 }
