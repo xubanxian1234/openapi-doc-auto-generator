@@ -21,22 +21,46 @@
   line-height: 1.5;
 }
 
+/* ==================== 封面页 ==================== */
+.doc-table__cover-page {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  /* 高度不设死，由 html2pdf 的 page-break-after 来控制分页 */
+  min-height: 600px;
+  page-break-after: always;
+}
+
+.doc-table__cover-title {
+  font-size: 36pt;
+  font-weight: bold;
+  color: #000;
+  margin-bottom: 40px;
+}
+
+.doc-table__cover-subtitle {
+  font-size: 24pt;
+  font-weight: bold;
+  color: #000;
+}
+
 /* ==================== 目录 (TOC) ==================== */
 .doc-table__toc {
-  margin-bottom: 40px;
   padding: 24px 0;
   background: transparent;
   font-family: var(--el-font-family, sans-serif);
+  page-break-after: always; /* 强制目录后分页 */
 }
 
 .doc-table__toc-title {
-  font-size: 18pt;
+  font-size: 20pt;
   font-weight: 600;
   color: #303133;
   margin-bottom: 24px;
   padding-bottom: 12px;
-  border-bottom: 2px solid #EBEEF5;
-  text-align: left;
+  text-align: center;
+  letter-spacing: 12px;
 }
 
 .doc-table__toc-list, .doc-table__toc-sublist {
@@ -46,47 +70,56 @@
 }
 
 .doc-table__toc-sublist {
-  padding-left: 20px;
-  margin-top: 8px;
+  padding-left: 40px;
+  margin-top: 4px;
 }
 
 .doc-table__toc-item-group {
-  margin-bottom: 16px;
+  margin-bottom: 8px;
 }
 
 .doc-table__toc-item-endpoint {
-  margin-bottom: 10px;
+  margin-bottom: 6px;
   display: flex;
   align-items: baseline;
 }
 
-/* 虚线延伸 */
-.doc-table__toc-item-endpoint::after {
-  content: '';
+/* 虚线延伸 (dotted leader) */
+.doc-table__toc-leader {
   flex-grow: 1;
-  border-bottom: 1px dotted #ccc;
-  margin-left: 8px;
+  border-bottom: 1px dotted #999;
+  margin: 0 6px;
   position: relative;
-  top: -4px;
+  top: -3px;
+  min-width: 30px; /* 保证最少显示一段虚线 */
 }
 
 .doc-table__toc-link {
-  color: #606266;
+  color: #333;
   text-decoration: none;
   font-size: 11pt;
   transition: color 0.2s;
   display: inline-block;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
-.doc-table__toc-item-group > .doc-table__toc-link {
+.doc-table__toc-item-group > .doc-table__toc-link,
+.doc-table__toc-item-group > .doc-table__toc-item-endpoint > .doc-table__toc-link {
   font-weight: bold;
-  color: #303133;
+  color: #000;
   font-size: 12pt;
 }
 
 .doc-table__toc-link:hover {
   color: #409EFF;
+}
+
+.doc-table__toc-page {
+  font-size: 11pt;
+  color: #333;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 /* ==================== 端点分组与标题 ==================== */
@@ -101,6 +134,8 @@
   margin: 32px 0 16px 0;
   padding-bottom: 8px;
   border-bottom: 2px solid var(--border-color, #eaeaea);
+  page-break-inside: avoid;
+  page-break-after: avoid;
 }
 
 .doc-table__group-title:first-child {
@@ -113,6 +148,8 @@
   color: #000000;
   margin: 24px 0 8px 0;
   padding: 0;
+  page-break-inside: avoid;
+  page-break-after: avoid;
 }
 
 .doc-table__endpoint-title:first-child {
@@ -227,6 +264,8 @@
   color: #000000;
   margin: 16px 0 8px 0;
   padding: 0;
+  page-break-inside: avoid;
+  page-break-after: avoid;
 }
 
 .doc-table__business-desc {
@@ -240,4 +279,3 @@
 .doc-table__cell-bold {
   font-weight: bold;
 }
-

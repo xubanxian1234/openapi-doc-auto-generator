@@ -3,7 +3,6 @@ package com.docgen.word;
 import com.docgen.model.ApiDocumentDTO;
 import com.docgen.model.ApiEndpointDTO;
 import com.docgen.word.factory.CombinedEndpointFactory;
-import com.docgen.word.factory.TitleSectionFactory;
 import com.docgen.word.factory.TocFactory;
 import org.apache.poi.wp.usermodel.HeaderFooterType;
 import org.apache.poi.xwpf.usermodel.ParagraphAlignment;
@@ -14,8 +13,9 @@ import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.apache.poi.xwpf.usermodel.XWPFRun;
 import org.apache.poi.xwpf.usermodel.Borders;
 import com.docgen.word.style.WordStyleConstants;
-import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTSimpleField;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.*;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -24,17 +24,12 @@ import java.util.Map;
 /**
  * Word 文档建造者 — 建造者模式 (Builder Pattern)。
  *
- * 提供链式 API 将文档的各区域按顺序组装，
- * 将"构建什么"与"如何构建"彻底解耦。
- * 各区域的渲染细节由对应的 Factory 负责。
+ * 文档结构：
+ * - 节1 (封面页)：无页眉页脚，无页码
+ * - 节2 (目录页)：有页眉，页码用罗马数字（可选）
+ * - 节3 (正文)：有页眉页脚，页码从 1 开始
  *
- * 使用方式：
- * XWPFDocument doc = new WordDocumentBuilder()
- *     .createDocument()
- *     .addHeaderFooter(docDTO)
- *     .addTitleSection(docDTO)
- *     .addAllEndpoints(docDTO)
- *     .build();
+ * 使用 Word Section Break 实现页码从正文开始计数。
  */
 public class WordDocumentBuilder {
 
@@ -51,7 +46,8 @@ public class WordDocumentBuilder {
     }
 
     /**
-     * 添加页眉页脚（带页码）。
+     * 添加页眉页脚（带页码，从正文第一页开始编号）。
+     * 页眉页脚添加到文档默认 section 中，所有后续 section 会继承。
      */
     public WordDocumentBuilder addHeaderFooter(ApiDocumentDTO docDTO) {
         // 页眉
@@ -66,41 +62,64 @@ public class WordDocumentBuilder {
         hRun.setFontSize(9);
         hRun.setFontFamily(WordStyleConstants.FONT_FAMILY);
 
-        // 页脚
+        // 页脚：使用 fldChar 方式插入 PAGE 和 NUMPAGES 域
         XWPFFooter footer = document.createFooter(HeaderFooterType.DEFAULT);
         XWPFParagraph fPara = footer.createParagraph();
         fPara.setAlignment(ParagraphAlignment.CENTER);
         fPara.setBorderTop(Borders.SINGLE);
         
-        XWPFRun fRun = fPara.createRun();
-        fRun.setText("第 ");
-        fRun.setColor("666666");
-        fRun.setFontSize(9);
-        fRun.setFontFamily(WordStyleConstants.FONT_FAMILY);
-        
-        CTSimpleField pageField = fPara.getCTP().addNewFldSimple();
-        pageField.setInstr("PAGE \\* MERGEFORMAT");
-        
-        XWPFRun fRun2 = fPara.createRun();
-        fRun2.setText(" 页 / 共 ");
-        fRun2.setColor("666666");
-        fRun2.setFontSize(9);
-        fRun2.setFontFamily(WordStyleConstants.FONT_FAMILY);
-        
-        CTSimpleField numPagesField = fPara.getCTP().addNewFldSimple();
-        numPagesField.setInstr("NUMPAGES \\* MERGEFORMAT");
-        
-        XWPFRun fRun3 = fPara.createRun();
-        fRun3.setText(" 页");
-        fRun3.setColor("666666");
-        fRun3.setFontSize(9);
-        fRun3.setFontFamily(WordStyleConstants.FONT_FAMILY);
+        addFooterTextField(fPara, "第 ");
+        addFooterPageField(fPara, "PAGE");
+        addFooterTextField(fPara, " 页 / 共 ");
+        addFooterPageField(fPara, "NUMPAGES");
+        addFooterTextField(fPara, " 页");
 
         return this;
     }
 
+    private void addFooterTextField(XWPFParagraph para, String text) {
+        XWPFRun run = para.createRun();
+        run.setText(text);
+        run.setColor("666666");
+        run.setFontSize(9);
+        run.setFontFamily(WordStyleConstants.FONT_FAMILY);
+    }
+
+    private void addFooterPageField(XWPFParagraph para, String fieldName) {
+        CTP ctp = para.getCTP();
+        // BEGIN
+        CTR beginR = ctp.addNewR();
+        CTRPr beginRpr = beginR.addNewRPr();
+        beginRpr.addNewColor().setVal("666666");
+        beginRpr.addNewSz().setVal(BigInteger.valueOf(18));
+        CTFldChar beginChar = beginR.addNewFldChar();
+        beginChar.setFldCharType(STFldCharType.BEGIN);
+        // INSTR
+        CTR instrR = ctp.addNewR();
+        CTRPr instrRpr = instrR.addNewRPr();
+        instrRpr.addNewColor().setVal("666666");
+        instrRpr.addNewSz().setVal(BigInteger.valueOf(18));
+        CTText instrText = instrR.addNewInstrText();
+        instrText.setStringValue(" " + fieldName + " ");
+        // SEPARATE
+        CTR sepR = ctp.addNewR();
+        CTFldChar sepChar = sepR.addNewFldChar();
+        sepChar.setFldCharType(STFldCharType.SEPARATE);
+        // Placeholder
+        CTR textR = ctp.addNewR();
+        CTRPr textRpr = textR.addNewRPr();
+        textRpr.addNewColor().setVal("666666");
+        textRpr.addNewSz().setVal(BigInteger.valueOf(18));
+        CTText pageText = textR.addNewT();
+        pageText.setStringValue("1");
+        // END
+        CTR endR = ctp.addNewR();
+        CTFldChar endChar = endR.addNewFldChar();
+        endChar.setFldCharType(STFldCharType.END);
+    }
+
     /**
-     * 添加封面页。
+     * 添加封面页，然后插入分节符（下一页），使目录页起新页。
      */
     public WordDocumentBuilder addCoverPage(ApiDocumentDTO docDTO) {
         XWPFParagraph p = document.createParagraph();
@@ -122,15 +141,16 @@ public class WordDocumentBuilder {
         subtitleRun.setBold(true);
         subtitleRun.setFontSize(24);
         subtitleRun.setFontFamily(WordStyleConstants.FONT_FAMILY);
-        
-        XWPFParagraph pb = document.createParagraph();
-        pb.setPageBreak(true);
-        
+
+        // 插入分节符（下一页），封面页结束
+        addSectionBreakNextPage(p2);
+
         return this;
     }
 
     /**
      * 添加所有端点的表格，并提前生成目录。
+     * 目录和正文之间也插入分节符，正文页码从 1 开始。
      */
     public WordDocumentBuilder addAllEndpoints(ApiDocumentDTO docDTO) {
         if (docDTO.getEndpoints() == null) {
@@ -145,20 +165,19 @@ public class WordDocumentBuilder {
         }
 
         // 2. 第一遍遍历：生成 TOC 条目和对应的 Bookmark
-        // 为“1. 概述”追加目录项
-        TocFactory.TocEntry overviewEntry = tocFactory.addEntry("1. 概述", 1);
+        TocFactory.TocEntry overviewEntry = tocFactory.addEntry("1    概述", 1);
         
         Map<String, TocFactory.TocEntry> tagTocEntries = new LinkedHashMap<>();
         Map<ApiEndpointDTO, TocFactory.TocEntry> endpointTocEntries = new LinkedHashMap<>();
 
-        int majorIndex = 2; // API 接口从第 2 章开始
+        int majorIndex = 2;
         for (Map.Entry<String, List<ApiEndpointDTO>> entry : grouped.entrySet()) {
-            String tagHeading = majorIndex + ". " + entry.getKey();
+            String tagHeading = majorIndex + "    " + entry.getKey();
             tagTocEntries.put(entry.getKey(), tocFactory.addEntry(tagHeading, 1));
 
             int minorIndex = 1;
             for (ApiEndpointDTO endpoint : entry.getValue()) {
-                String endpointTitle = majorIndex + "." + minorIndex + " " + (endpoint.getSummary() != null ? endpoint.getSummary() : endpoint.getPath());
+                String endpointTitle = majorIndex + "." + minorIndex + "      " + (endpoint.getSummary() != null ? endpoint.getSummary() : endpoint.getPath());
                 endpointTocEntries.put(endpoint, tocFactory.addEntry(endpointTitle, 2));
                 minorIndex++;
             }
@@ -168,11 +187,16 @@ public class WordDocumentBuilder {
         // 3. 渲染目录段落
         tocFactory.render(document);
 
-        // 分页符 (目录后起新页)
-        XWPFParagraph pageBreakPara = document.createParagraph();
-        pageBreakPara.setPageBreak(true);
+        // 4. 目录后插入分节符（下一页），正文起新页
+        //    获取目录最后一个段落，在其上添加分节符
+        List<XWPFParagraph> paragraphs = document.getParagraphs();
+        XWPFParagraph lastTocPara = paragraphs.get(paragraphs.size() - 1);
+        addSectionBreakNextPage(lastTocPara);
+        
+        // 设置正文节的页码从 1 开始
+        setPageNumberStart(1);
 
-        // 4. 第二遍遍历：实际渲染正文
+        // 5. 第二遍遍历：实际渲染正文
         // 渲染第一章：概述
         endpointFactory.renderTagHeading(document, 1, "概述", overviewEntry.bookmarkId, overviewEntry.bookmarkName);
         
@@ -209,5 +233,26 @@ public class WordDocumentBuilder {
     public XWPFDocument build() {
         document.enforceUpdateFields();
         return document;
+    }
+
+    /**
+     * 在指定段落上添加分节符（下一页）。
+     * 这会结束当前节并在下一页开始新的节。
+     */
+    private void addSectionBreakNextPage(XWPFParagraph paragraph) {
+        CTPPr ppr = paragraph.getCTP().isSetPPr() ? paragraph.getCTP().getPPr() : paragraph.getCTP().addNewPPr();
+        CTSectPr sectPr = ppr.isSetSectPr() ? ppr.getSectPr() : ppr.addNewSectPr();
+        sectPr.addNewType().setVal(STSectionMark.NEXT_PAGE);
+    }
+
+    /**
+     * 设置文档 body 级别的 sectPr 的页码起始值。
+     * body 的 sectPr 控制文档最后一个节（即正文节）的属性。
+     */
+    private void setPageNumberStart(int startPage) {
+        CTBody body = document.getDocument().getBody();
+        CTSectPr sectPr = body.isSetSectPr() ? body.getSectPr() : body.addNewSectPr();
+        CTPageNumber pgNum = sectPr.isSetPgNumType() ? sectPr.getPgNumType() : sectPr.addNewPgNumType();
+        pgNum.setStart(BigInteger.valueOf(startPage));
     }
 }

@@ -38,9 +38,9 @@
 - **model**: ApiDocumentDTO, ApiEndpointDTO, ParameterDTO, SchemaFieldDTO
 - **service/OpenApiParseService**: swagger-parser 解析主服务
 - **service/strategy**: SchemaParseStrategy + 4个策略实现 + SchemaStrategyFactory
-- **word/WordDocumentBuilder**: Builder 模式链式组装 Word
+- **word/WordDocumentBuilder**: Builder 模式链式组装 Word（封面页 + 目录 + 概述章 + 接口分组）
 - **word/WordGenerationService**: DTO → byte[] 转换服务
-- **word/factory**: TitleSectionFactory, EndpointTableFactory, ParameterTableFactory, TocFactory (负责带书签链接的目录)
+- **word/factory**: CombinedEndpointFactory (合并表格渲染), TocFactory (fldChar PAGEREF 方式生成目录+虚线+页码), TitleSectionFactory
 - **word/style/WordStyleConstants**: 集中管理所有样式常量
 - **config/SmartPortConfig**: 端口探测工具类
 
@@ -50,7 +50,7 @@
 - **ExportToolbar.vue**: Word/PDF 导出按钮
 - **HelpDrawer.vue**: Element Plus 抽屉 + Markdown 使用指南
 - **App.vue**: 主页面布局 (暗色主题 + 响应式)
-- **useExport.ts**: PDF(html2pdf.js) / Word(Blob下载) 组合式函数
+- **useExport.ts**: PDF(html2pdf.js 直出 + DOM offsetTop 页码计算) / Word(Blob下载) 组合式函数
 - **api/openapi.ts**: Axios API 封装
 - **types/api.ts**: TS 类型定义
 - **styles/global.css**: 暗色主题设计系统
@@ -64,8 +64,10 @@
 4. **模板方法 (Template Method)** — WordSectionFactory 抽象基类封装 POI 公共操作
 5. **嵌套深度 ≤ 3 层**：严格使用卫语句 + 方法抽取控制
 6. **循环引用保护**：递归解析时维护 visitedRefs Set，最大深度 10 层
-7. **书签与超链接生成 (Word)**：使用 POI 的 `CTBookmark` 和 `CTHyperlink`，生成完全静态且可直接点击跳转的 Word 目录。
-8. **PDF 导出渲染挂钩**：拦截 `html2pdf.js` 过程对象，利用 `jsPDF` API 在每页独立绘制静态的页眉与页码。
+7. **书签与超链接生成 (Word)**：使用 POI 的 `CTBookmark` 和 `CTHyperlink` + `fldChar` 方式生成 PAGEREF 域，兼容 Office 和 WPS 的自动更新。目录标题居中，虚线引导符右对齐页码。
+8. **PDF 导出渲染挂钩**：拦截 `html2pdf.js` 过程对象，利用 `jsPDF` API 在每页独立绘制静态的页眉与页码。PDF 目录页码通过 DOM offsetTop 实时计算注入。
+9. **PDF 封面页**：前端 DOM 中嵌入封面区块，通过固定高度 + CSS `page-break` 实现独占首页。
+10. **PDF 目录独占页**：CSS `page-break-after` 不再使用，改为在 `pagebreak` 配置中使用 `css` + `legacy` 模式自然分页。
 
 ## 测试数据
 

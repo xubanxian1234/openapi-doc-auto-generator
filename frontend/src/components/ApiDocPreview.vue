@@ -1,19 +1,33 @@
 <template>
   <div ref="previewRef" class="doc-table__container" v-if="doc">
+    <!-- 封面页 (供 PDF 导出使用) -->
+    <div class="doc-table__cover-page">
+      <div class="doc-table__cover-title">{{ doc.title || 'API 接口文档' }}</div>
+      <div class="doc-table__cover-subtitle">接口集成说明</div>
+    </div>
+
     <!-- 目录区 (TOC) -->
     <div class="doc-table__toc" v-if="groupedEndpoints.length > 0 || doc.description">
       <h2 class="doc-table__toc-title">目录</h2>
       <ul class="doc-table__toc-list">
-        <li class="doc-table__toc-item-group" v-if="doc.description">
-          <a href="#overview" class="doc-table__toc-link">1. 概述</a>
+        <li class="doc-table__toc-item-group doc-table__toc-item-endpoint" v-if="doc.description">
+          <a href="#overview" class="doc-table__toc-link">1&nbsp;&nbsp;&nbsp;&nbsp;概述</a>
+          <div class="doc-table__toc-leader"></div>
+          <span class="doc-table__toc-page" data-target="overview"></span>
         </li>
         <li v-for="(group, gIdx) in groupedEndpoints" :key="'toc-g' + gIdx" class="doc-table__toc-item-group">
-          <a :href="'#tag-' + gIdx" class="doc-table__toc-link">{{ gIdx + 2 }}. {{ group.tag }}</a>
+          <div class="doc-table__toc-item-endpoint">
+            <a :href="'#tag-' + gIdx" class="doc-table__toc-link">{{ gIdx + 2 }}&nbsp;&nbsp;&nbsp;&nbsp;{{ group.tag }}</a>
+            <div class="doc-table__toc-leader"></div>
+            <span class="doc-table__toc-page" :data-target="'tag-' + gIdx"></span>
+          </div>
           <ul class="doc-table__toc-sublist" v-if="group.endpoints.length > 0">
             <li v-for="(endpoint, eIdx) in group.endpoints" :key="'toc-e' + gIdx + '-' + eIdx" class="doc-table__toc-item-endpoint">
               <a :href="'#ep-' + gIdx + '-' + eIdx" class="doc-table__toc-link">
-                {{ gIdx + 2 }}.{{ eIdx + 1 }} {{ endpoint.summary || endpoint.path }}
+                {{ gIdx + 2 }}.{{ eIdx + 1 }}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{ endpoint.summary || endpoint.path }}
               </a>
+              <div class="doc-table__toc-leader"></div>
+              <span class="doc-table__toc-page" :data-target="'ep-' + gIdx + '-' + eIdx"></span>
             </li>
           </ul>
         </li>

@@ -2,13 +2,17 @@
   "openapi": "3.0.1",
   "info": {
     "title": "项目管理系统开放 API",
-    "description": "提供给第三方的项目管理及操作接口。本文档包含了项目的创建、查询、更新等操作规范。",
+    "description": "提供给第三方的项目管理及操作接口。本文档包含了项目的创建、查询、更新等操作规范。\n\n认证方式：\n- OAuth 2.0：通过授权码或客户端凭证模式获取 access_token，在请求头中携带 Authorization: Bearer <access_token>\n- HTTP Basic Auth：使用应用的 client_id 和 client_secret 进行基本认证，格式为 Authorization: Basic <base64(client_id:client_secret)>",
     "version": "1.2.0"
   },
   "servers": [
     {
       "url": "https://api.example.com/v1"
     }
+  ],
+  "security": [
+    { "OAuth2": ["read", "write"] },
+    { "BasicAuth": [] }
   ],
   "paths": {
     "/thirdparty/createProject": {
@@ -17,12 +21,15 @@
         "summary": "创建项目",
         "description": "支持创建空项目。isEmpty 参数为 true 时，项目中不包含任何文档，为 false 时，项目中会创建一个零件文档与一个装配文档。此属性非必需，默认值为 false。isPublic 参数为 true 时，创建的项目为私有项目。此属性非必需，默认值为 false。",
         "operationId": "createProject",
+        "security": [
+          { "OAuth2": ["write"] }
+        ],
         "parameters": [
           {
             "name": "Authorization",
             "in": "header",
             "required": true,
-            "description": "Bearer xxx<token>",
+            "description": "Bearer <access_token> (OAuth 2.0) 或 Basic <base64(client_id:client_secret)>",
             "schema": {
               "type": "string"
             }
@@ -100,7 +107,20 @@
         "summary": "上传项目文档",
         "description": "上传二进制文件到指定的项目中。",
         "operationId": "uploadDocument",
+        "security": [
+          { "OAuth2": ["write"] },
+          { "BasicAuth": [] }
+        ],
         "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": true,
+            "description": "Bearer <access_token> 或 Basic <credentials>",
+            "schema": {
+              "type": "string"
+            }
+          },
           {
             "name": "projectId",
             "in": "query",
@@ -160,6 +180,20 @@
         "summary": "添加项目成员",
         "description": "通过标准的 application/json 格式添加新成员到项目组。",
         "operationId": "addMember",
+        "security": [
+          { "OAuth2": ["write"] }
+        ],
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": true,
+            "description": "Bearer <access_token>",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -205,6 +239,20 @@
         "summary": "更新项目全局配置",
         "description": "使用 application/x-www-form-urlencoded 格式提交简单的键值对更新。",
         "operationId": "updateConfig",
+        "security": [
+          { "BasicAuth": [] }
+        ],
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": true,
+            "description": "Basic <base64(client_id:client_secret)>",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -246,12 +294,16 @@
         "summary": "获取项目详情",
         "description": "根据项目 ID 查询指定项目的详细信息，包括成员列表和当前状态。",
         "operationId": "getProjectDetail",
+        "security": [
+          { "OAuth2": ["read"] },
+          { "BasicAuth": [] }
+        ],
         "parameters": [
           {
             "name": "Authorization",
             "in": "header",
             "required": true,
-            "description": "Bearer xxx<token>",
+            "description": "Bearer <access_token> 或 Basic <credentials>",
             "schema": {
               "type": "string"
             }
@@ -292,6 +344,34 @@
     }
   },
   "components": {
+    "securitySchemes": {
+      "OAuth2": {
+        "type": "oauth2",
+        "description": "OAuth 2.0 认证，支持授权码模式和客户端凭证模式",
+        "flows": {
+          "authorizationCode": {
+            "authorizationUrl": "https://auth.example.com/oauth/authorize",
+            "tokenUrl": "https://auth.example.com/oauth/token",
+            "scopes": {
+              "read": "读取项目和文档信息",
+              "write": "创建、修改项目和文档"
+            }
+          },
+          "clientCredentials": {
+            "tokenUrl": "https://auth.example.com/oauth/token",
+            "scopes": {
+              "read": "读取项目和文档信息",
+              "write": "创建、修改项目和文档"
+            }
+          }
+        }
+      },
+      "BasicAuth": {
+        "type": "http",
+        "scheme": "basic",
+        "description": "HTTP Basic Auth 认证，使用 client_id 作为用户名，client_secret 作为密码"
+      }
+    },
     "schemas": {
       "BaseResponse": {
         "type": "object",
